@@ -1,0 +1,1943 @@
+:root {
+  --bg: #050609;
+  --frame: #1b1e2c;
+  --accent: #4fd1c5;
+  --text: #c9d1e8;
+
+  font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  /* The layout always fits the window; never let arrow keys scroll the page. */
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px 16px;
+  gap: 10px;
+}
+
+.app-header {
+  position: relative;
+  text-align: center;
+}
+
+.panel-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Game on the left, automaton panel on the right. */
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 14px;
+}
+
+.play-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(79, 209, 197, 0.45);
+}
+
+/* Takes the remaining height; Phaser's FIT mode scales the canvas to this box. */
+.game-frame {
+  flex: 1;
+  min-height: 0;
+  border: 2px solid var(--frame);
+  background: #000;
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.game-canvas canvas {
+  image-rendering: pixelated;
+}
+
+.controls-hint {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 28px;
+  font-size: 0.9rem;
+}
+
+.hud-item {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.hud-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  opacity: 0.6;
+}
+
+.hud-dim {
+  opacity: 0.6;
+}
+
+.hud-state {
+  min-width: 6em;
+  font-weight: 700;
+}
+
+.hud-state-patrol {
+  color: #f6e05e;
+}
+
+.hud-state-alert,
+.hud-state-search {
+  color: #ed8936;
+}
+
+.hud-state-chase,
+.hud-state-capture {
+  color: #e53e3e;
+}
+
+.hud-captured {
+  font-weight: 700;
+  color: #e53e3e;
+}
+
+.guard-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  border: 1px solid #2b3047;
+  font-size: 0.8rem;
+}
+
+.guard-chip-selected {
+  background: #151826;
+  border-width: 2px;
+}
+
+.guard-chip .hud-state {
+  min-width: 4.8em;
+  text-align: left;
+}
+
+.guard-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: baseline;
+}
+
+.guard-chip .guard-swatch {
+  margin-right: 0;
+}
+
+.panel-subtitle {
+  float: right;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.hud-paused {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: #11131c;
+  border: 1px solid #2b3047;
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ---------- Automaton panel ---------- */
+
+.automaton-panel {
+  width: clamp(340px, 34vw, 470px);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 2px solid var(--frame);
+  background: #090b11;
+  overflow: hidden;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+
+.sim-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sim-status {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.sim-paused {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.sim-running {
+  font-weight: 700;
+  color: #68d391;
+}
+
+.dfa-graph {
+  width: 100%;
+  height: auto;
+  flex-shrink: 0;
+  background: #0d0f17;
+  border: 1px solid var(--frame);
+}
+
+.node-circle {
+  fill: #151826;
+  stroke: #4a5170;
+  stroke-width: 1.5;
+  transition: fill 0.15s, stroke 0.15s;
+}
+
+.node-accept-ring {
+  fill: none;
+  stroke: #4a5170;
+  stroke-width: 1.2;
+}
+
+.node-label {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.node-current .node-circle {
+  fill: var(--accent);
+  stroke: #b2f5ea;
+  stroke-width: 2.5;
+}
+
+.node-current .node-accept-ring {
+  stroke: #0b0d14;
+}
+
+.node-current .node-label {
+  fill: #0b0d14;
+}
+
+.node-inspect .node-circle {
+  stroke: #90cdf4;
+  stroke-width: 3;
+  stroke-dasharray: 4 3;
+}
+
+.edge-path {
+  fill: none;
+  stroke: #4a5170;
+  stroke-width: 1.3;
+}
+
+.arrowhead-normal {
+  fill: #4a5170;
+}
+
+.arrowhead-live {
+  fill: #f6e05e;
+}
+
+.arrowhead-inspect {
+  fill: #90cdf4;
+}
+
+.edge-live .edge-path {
+  stroke: #f6e05e;
+  stroke-width: 2.5;
+}
+
+.edge.edge-inspect .edge-path {
+  stroke: #90cdf4;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+.edge-label {
+  font-size: 11px;
+  fill: #8f98b8;
+  /* Dark outline behind the text keeps labels readable over arrows. */
+  paint-order: stroke;
+  stroke: #0d0f17;
+  stroke-width: 3px;
+}
+
+.symbol-live {
+  fill: #f6e05e;
+  font-weight: 700;
+}
+
+.symbol-inspect {
+  fill: #90cdf4;
+  font-weight: 700;
+}
+
+.start-label {
+  font-size: 10px;
+  fill: #8f98b8;
+}
+
+.graph-legend {
+  margin: 0;
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.legend-current {
+  color: var(--accent);
+}
+
+.legend-live {
+  color: #f6e05e;
+}
+
+.legend-inspect {
+  color: #90cdf4;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--frame);
+}
+
+.tab {
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  background: none;
+}
+
+.tab-selected {
+  background: #151826;
+  color: var(--accent);
+  border-color: var(--frame);
+}
+
+/* The only part of the panel that scrolls. */
+.tab-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 0.78rem;
+}
+
+.history-empty {
+  opacity: 0.7;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0 6px;
+  opacity: 0.8;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  text-align: left;
+  border: 1px solid transparent;
+  background: none;
+  padding: 3px 4px;
+  font-size: 0.75rem;
+}
+
+.history-row:nth-child(odd) {
+  background: #0d0f17;
+}
+
+.history-row-selected {
+  border-color: #90cdf4;
+  background: #13243a !important;
+}
+
+.history-row-self {
+  opacity: 0.65;
+}
+
+.history-step {
+  min-width: 2.6em;
+  opacity: 0.6;
+}
+
+.history-time {
+  min-width: 4.2em;
+  opacity: 0.6;
+}
+
+.history-state {
+  font-weight: 700;
+}
+
+.history-symbol {
+  color: #f6e05e;
+}
+
+.history-tag {
+  margin-left: auto;
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.formal-intro {
+  margin: 6px 0 4px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.formal-list {
+  display: grid;
+  grid-template-columns: 2em 1fr;
+  gap: 3px 6px;
+  margin: 0 0 8px;
+}
+
+.formal-list dt {
+  font-weight: 700;
+}
+
+.formal-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.formal-dim {
+  opacity: 0.6;
+}
+
+.formal-note {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+}
+
+.delta-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.7rem;
+}
+
+.delta-table th,
+.delta-table td {
+  border: 1px solid var(--frame);
+  padding: 3px 4px;
+  text-align: center;
+}
+
+.delta-table th[scope="row"] {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.delta-self {
+  opacity: 0.45;
+}
+
+.delta-row-current th[scope="row"] {
+  color: #0b0d14;
+  background: var(--accent);
+}
+
+.delta-live {
+  outline: 2px solid #f6e05e;
+  outline-offset: -2px;
+  color: #f6e05e;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.delta-inspect {
+  outline: 2px dashed #90cdf4;
+  outline-offset: -2px;
+  color: #90cdf4;
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* ---------- Mode switch ---------- */
+
+.mode-switch {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.mode-switch .tab {
+  border-radius: 3px;
+  border-bottom: 1px solid #2b3047;
+}
+
+/* Narrower windows: the centred title would run into the mode tabs, so it moves right and shrinks. */
+@media (max-width: 1500px) {
+  .app-header {
+    text-align: right;
+    padding-right: 240px;
+  }
+
+  .app-header .title {
+    font-size: 1.3rem;
+    letter-spacing: 0.25em;
+  }
+}
+
+/* Too narrow for tabs, title and buttons side by side: keep the header's height, drop the title. */
+@media (max-width: 1000px) {
+  .app-header .title {
+    visibility: hidden;
+  }
+}
+
+/* In comparison mode the game shrinks to a narrow (still live) column. */
+.workspace-compare .play-area {
+  flex: 0 0 clamp(300px, 30vw, 440px);
+}
+
+.workspace-compare .controls-hint {
+  gap: 10px;
+  font-size: 0.75rem;
+}
+
+/* ---------- ε-transitions ---------- */
+
+.edge-epsilon .edge-path {
+  stroke: #9f7aea;
+  stroke-dasharray: 4 3;
+}
+
+.edge-epsilon .edge-label {
+  fill: #b794f4;
+  font-style: italic;
+}
+
+.arrowhead-epsilon {
+  fill: #9f7aea;
+}
+
+.edge-epsilon.edge-live .edge-path {
+  stroke: #f6e05e;
+  stroke-dasharray: 4 3;
+}
+
+.delta-epsilon {
+  color: #b794f4;
+}
+
+/* ---------- NFA ⇄ DFA comparison ---------- */
+
+.comparison {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 2px solid var(--frame);
+  background: #090b11;
+  overflow: hidden;
+}
+
+.cmp-explain {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+.cmp-explain strong {
+  color: var(--accent);
+}
+
+.cmp-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cmp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.cmp-row button {
+  font-size: 0.72rem;
+  padding: 3px 7px;
+}
+
+.cmp-row-label {
+  min-width: 5.5em;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+
+.cmp-sep {
+  width: 10px;
+}
+
+.preset-selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cmp-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #fbd38d;
+}
+
+.tape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.tape-label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.tape-cell {
+  padding: 2px 6px;
+  border: 1px solid #2b3047;
+  background: #0d0f17;
+}
+
+.tape-read {
+  opacity: 0.55;
+}
+
+.tape-head {
+  border-color: #f6e05e;
+  color: #f6e05e;
+  box-shadow: 0 0 6px rgba(246, 224, 94, 0.35);
+}
+
+.tape-unread {
+  opacity: 0.85;
+}
+
+.tape-end,
+.tape-empty {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.tape-count {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.cmp-machines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.cmp-machine {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cmp-machine h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+/* Keep both graphs within the window height. */
+.cmp-graph {
+  max-height: 31vh;
+}
+
+.cmp-graph .edge-label {
+  font-size: 12px;
+}
+
+.cmp-status {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.cmp-set {
+  font-weight: 700;
+}
+
+.verdict {
+  padding: 1px 8px;
+  border: 1px solid;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.verdict-accept {
+  color: #68d391;
+  border-color: #68d391;
+}
+
+.verdict-reject {
+  color: #fc8181;
+  border-color: #fc8181;
+}
+
+.cmp-agree {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.cmp-agree-ok {
+  color: #68d391;
+}
+
+.cmp-agree-bad {
+  color: #fc8181;
+  font-weight: 700;
+}
+
+.cmp-traces {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+}
+
+.cmp-traces h4 {
+  margin: 4px 0;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.trace-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.trace-table th,
+.trace-table td {
+  border: 1px solid var(--frame);
+  padding: 2px 5px;
+  text-align: left;
+}
+
+.trace-table th {
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.trace-start td {
+  opacity: 0.75;
+}
+
+.trace-latest td {
+  background: #1a1d10;
+}
+
+.trace-symbol {
+  color: #f6e05e;
+}
+
+.trace-eps-added {
+  color: #b794f4;
+  font-style: italic;
+}
+
+.trace-dead {
+  color: #fc8181;
+}
+
+.subset-current td {
+  background: var(--accent);
+  color: #0b0d14;
+  font-weight: 700;
+}
+
+.controls-hint kbd {
+  display: inline-block;
+  min-width: 1.4em;
+  margin: 0 2px;
+  padding: 1px 4px;
+  border: 1px solid var(--frame);
+  border-bottom-width: 3px;
+  border-radius: 3px;
+  font-family: inherit;
+  color: var(--accent);
+}
+
+.cmp-trap-toggle {
+  float: right;
+  font-size: 0.68rem;
+  letter-spacing: 0;
+}
+
+/* ---------- Automata Lab ---------- */
+
+/* The game stays mounted (and keeps a real size for Phaser) but is moved out of view. */
+.workspace-lab {
+  position: relative;
+}
+
+.workspace-lab .play-area {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  visibility: hidden;
+}
+
+.lab {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.lab[hidden] {
+  display: none;
+}
+
+.lab-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.lab-toolbar button {
+  font-size: 0.75rem;
+}
+
+.lab-sep {
+  width: 8px;
+}
+
+.lab-name {
+  width: 12em;
+}
+
+.mode-switch-inline {
+  display: inline-flex;
+}
+
+.mode-switch-inline button {
+  border-radius: 0;
+}
+
+input,
+select {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: #0d0f17;
+  border: 1px solid #2b3047;
+  border-radius: 3px;
+  padding: 3px 6px;
+}
+
+input:focus,
+select:focus {
+  outline: 1px solid var(--accent);
+}
+
+input[aria-invalid="true"] {
+  border-color: #fc8181;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  padding: 0;
+}
+
+.lab-message {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #fbd38d;
+}
+
+.lab-canvas {
+  flex: 1;
+  min-height: 220px;
+  border: 2px solid var(--frame);
+  background: #0d0f17;
+  /* The editor needs pointer events for drags, not touch scrolling. */
+  touch-action: none;
+}
+
+.lab-graph {
+  width: 100%;
+  height: 100%;
+  border: none;
+  user-select: none;
+}
+
+.graph-background {
+  fill: transparent;
+}
+
+.lab-tool-addState .graph-background {
+  cursor: copy;
+}
+
+.lab-tool-select .node {
+  cursor: grab;
+}
+
+.lab-tool-addTransition .node {
+  cursor: crosshair;
+}
+
+.graph-interactive .edge {
+  cursor: pointer;
+}
+
+.edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+}
+
+.node-selected .node-circle {
+  stroke: #f6e05e;
+  stroke-width: 3;
+}
+
+.node-error .node-circle {
+  stroke: #fc8181;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+.edge.edge-selected .edge-path {
+  stroke: #f6e05e;
+  stroke-width: 2.5;
+}
+
+.edge.edge-error .edge-path {
+  stroke: #fc8181;
+}
+
+.edge.edge-error .edge-label {
+  fill: #fc8181;
+}
+
+.edge-preview {
+  stroke: #f6e05e;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  pointer-events: none;
+}
+
+.lab-issues {
+  max-height: 24vh;
+  overflow-y: auto;
+  font-size: 0.75rem;
+}
+
+.lab-verdict {
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.lab-verdict-ok {
+  color: #68d391;
+}
+
+.lab-verdict-bad {
+  color: #fc8181;
+}
+
+.lab-issue-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.lab-issue-list li {
+  margin: 2px 0;
+}
+
+.lab-side {
+  width: clamp(300px, 28vw, 400px);
+  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--frame);
+  background: #090b11;
+  font-size: 0.78rem;
+}
+
+.lab-section {
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--frame);
+}
+
+.lab-section h3 {
+  display: inline;
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.lab-section > h3 {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.lab-section summary {
+  cursor: pointer;
+}
+
+.lab-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0;
+}
+
+.lab-row input:not([type]) {
+  flex: 1;
+  min-width: 8em;
+}
+
+.lab-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lab-field input {
+  flex: 1;
+}
+
+.lab-field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+}
+
+.lab-hint {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+}
+
+.lab-error-text {
+  margin: 2px 0;
+  color: #fc8181;
+}
+
+.lab-danger {
+  border-color: #742a2a;
+}
+
+.lab-danger:hover:not(:disabled) {
+  border-color: #fc8181;
+  color: #fc8181;
+}
+
+.lab-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.lab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 2px 1px 7px;
+  border: 1px solid #2b3047;
+  background: #0d0f17;
+}
+
+.lab-chip button {
+  padding: 0 5px;
+  border: none;
+  background: none;
+}
+
+.lab-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.lab-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.lab-list li:nth-child(odd) {
+  background: #0d0f17;
+}
+
+.lab-list .link-button {
+  text-decoration: none;
+  color: var(--text);
+  text-align: left;
+}
+
+.lab-item-actions {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 0.7rem;
+}
+
+.lab-item-selected {
+  outline: 1px solid #f6e05e;
+}
+
+.lab-item-error .link-button,
+.lab-item-error > span {
+  color: #fc8181;
+}
+
+.lab-transition-form select {
+  max-width: 9em;
+}
+
+.delta-conflict {
+  color: #fc8181;
+  opacity: 1;
+  outline: 1px dashed #fc8181;
+  outline-offset: -2px;
+}
+
+/* ---------- Automata Lab: bottom panel (6B) ---------- */
+
+.lab-bottom {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 38vh;
+}
+
+.lab-bottom-body {
+  overflow-y: auto;
+  padding-top: 6px;
+  font-size: 0.75rem;
+}
+
+.tab-warning:not(.tab-selected) {
+  color: #fc8181;
+}
+
+.lab-sim-input {
+  width: 22em;
+}
+
+.lab-json {
+  width: 100%;
+  min-height: 10em;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.7rem;
+  color: var(--text);
+  background: #0d0f17;
+  border: 1px solid #2b3047;
+  border-radius: 3px;
+  padding: 6px;
+  resize: vertical;
+}
+
+/* Long state names (e.g. subset names like {q0,q1,q2}) use a smaller font inside the circle. */
+.lab-graph .node-label {
+  font-size: 10px;
+}
+
+.node-label-long {
+  font-size: 7.5px;
+  paint-order: stroke;
+  stroke: #0d0f17;
+  stroke-width: 2px;
+}
+
+.node-current .node-label-long {
+  stroke: var(--accent);
+}
+
+/* =====================================================================
+   Milestone 7A — visual polish (shared tokens, panels, menu, motion)
+   ===================================================================== */
+
+:root {
+  --state-patrol: #f6e05e;
+  --state-alert: #ed8936;
+  --state-chase: #e53e3e;
+  --ok: #68d391;
+  --bad: #fc8181;
+  --panel-bg: #090b11;
+  --panel-inner: #0d0f17;
+  --panel-edge: #2b3047;
+}
+
+body {
+  /* A faint scanline texture behind everything, for the retro-terminal look. */
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 3px);
+}
+
+.app {
+  position: relative;
+}
+
+/* One look for every framed panel: game, visualizer, comparison, lab. */
+.game-frame,
+.automaton-panel,
+.comparison,
+.lab-side,
+.lab-canvas {
+  border: 2px solid var(--frame);
+  box-shadow:
+    inset 0 0 0 1px #05060a,
+    0 0 0 1px #05060a,
+    0 0 18px rgba(79, 209, 197, 0.04);
+}
+
+.panel-title,
+.lab-section > h3,
+.lab-section summary h3,
+.cmp-machine h3 {
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.header-actions {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.header-actions .panel-toggle {
+  position: static;
+  transform: none;
+}
+
+/* ---------- HUD ---------- */
+
+.hud {
+  align-items: center;
+}
+
+.player-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid currentColor;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  animation: state-flash 0.6s ease-out;
+}
+
+.player-status .hud-label {
+  color: var(--text);
+}
+
+.player-status-detail {
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  opacity: 0.75;
+  color: var(--text);
+}
+
+.player-status-hidden {
+  color: var(--ok);
+}
+
+.player-status-searched,
+.player-status-spotted {
+  color: var(--state-alert);
+}
+
+.player-status-chased,
+.player-status-caught {
+  color: var(--state-chase);
+}
+
+.state-glyph {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-right: 4px;
+  text-align: center;
+}
+
+.state-flash {
+  animation: state-flash 0.6s ease-out;
+}
+
+@keyframes state-flash {
+  0% {
+    background: rgba(246, 224, 94, 0.35);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.controls-hint kbd {
+  box-shadow: inset 0 -1px 0 #05060a;
+}
+
+/* ---------- Automaton graphs: gentle motion on change ---------- */
+
+.node-current .node-circle {
+  animation: node-arrive 0.5s ease-out;
+}
+
+@keyframes node-arrive {
+  0% {
+    stroke-width: 8;
+    stroke-opacity: 0.4;
+  }
+  100% {
+    stroke-width: 2.5;
+    stroke-opacity: 1;
+  }
+}
+
+.edge-live .edge-path {
+  animation: edge-glow 0.7s ease-out;
+}
+
+@keyframes edge-glow {
+  0% {
+    stroke-width: 5;
+  }
+  100% {
+    stroke-width: 2.5;
+  }
+}
+
+.verdict {
+  animation: pop 0.25s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Motion off: the Settings switch, or the system's "reduce motion" preference. */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Main menu ---------- */
+
+.main-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse at center, rgba(79, 209, 197, 0.07), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 3px),
+    var(--bg);
+  overflow-y: auto;
+}
+
+.menu-card {
+  width: min(520px, 100%);
+  text-align: center;
+}
+
+.menu-title {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
+.menu-tagline {
+  margin: 8px 0 28px;
+  letter-spacing: 0.15em;
+  opacity: 0.75;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: left;
+  border: 2px solid var(--frame);
+  background: var(--panel-bg);
+}
+
+.menu-button span {
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+.menu-primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.menu-exit {
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.menu-footer {
+  margin-top: 24px;
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+/* ---------- Settings dialog ---------- */
+
+.dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 4, 7, 0.72);
+}
+
+.dialog {
+  width: min(460px, calc(100% - 32px));
+  padding: 16px 18px;
+  border: 2px solid var(--accent);
+  background: var(--panel-bg);
+  box-shadow: 0 0 30px rgba(79, 209, 197, 0.12);
+  outline: none;
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 0.85rem;
+}
+
+.setting input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.setting-value {
+  min-width: 3em;
+  text-align: right;
+  opacity: 0.8;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* =====================================================================
+   Milestone 7B — Tutorial
+   ===================================================================== */
+
+/* Like the Lab: the game stays mounted (real size for Phaser) but out of view. */
+.workspace-tutorial {
+  position: relative;
+}
+
+.workspace-tutorial .play-area {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  visibility: hidden;
+}
+
+.tutorial {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.tut-toc {
+  width: clamp(230px, 22vw, 300px);
+  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 2px solid var(--frame);
+  background: var(--panel-bg);
+  font-size: 0.75rem;
+}
+
+.tut-progress-text {
+  margin: 4px 0 10px;
+  opacity: 0.75;
+}
+
+.tut-modules,
+.tut-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tut-modules > li {
+  margin-bottom: 8px;
+}
+
+.tut-module-title {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.tut-module-current > .tut-module-title {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.tut-page-link {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  padding: 2px 0 2px 8px;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.tut-page-current {
+  color: var(--accent);
+  opacity: 1;
+  font-weight: 700;
+}
+
+.tut-check {
+  width: 1em;
+  color: var(--ok);
+}
+
+.tut-exits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.tut-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--frame);
+  background: var(--panel-bg);
+}
+
+.tut-header {
+  padding: 10px 18px 6px;
+  border-bottom: 1px solid var(--frame);
+}
+
+.tut-kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.tut-title {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+.tut-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 18px 18px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.tut-body > p,
+.tut-body > ul,
+.tut-body > aside {
+  max-width: 78ch;
+}
+
+.tut-body code {
+  color: #f6e05e;
+}
+
+.tut-math,
+.tut-formula {
+  color: #b2f5ea;
+}
+
+.tut-formula {
+  margin: 10px 0;
+  padding: 8px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-inner);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.tut-list li {
+  margin: 4px 0;
+}
+
+.tut-note {
+  margin: 12px 0;
+  padding: 8px 12px;
+  border: 1px solid #b7791f;
+  background: rgba(214, 158, 46, 0.07);
+}
+
+.tut-note strong {
+  color: #fbd38d;
+  letter-spacing: 0.06em;
+}
+
+.tut-note p {
+  margin: 4px 0 0;
+}
+
+.tut-widget,
+.tut-figure {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--panel-edge);
+  background: var(--panel-inner);
+}
+
+.tut-figure figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.tut-widget .tut-figure {
+  margin: 0;
+}
+
+.tut-graph {
+  max-height: 46vh;
+}
+
+.tut-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin: 8px 0;
+}
+
+.tut-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.tut-examples button {
+  font-size: 0.72rem;
+}
+
+.tut-status {
+  font-weight: 700;
+}
+
+.tut-pipeline {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.tut-stage h4 {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.tut-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.tut-events button {
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.tut-behaviour {
+  grid-template-columns: 3.5em 1fr;
+  font-size: 0.75rem;
+}
+
+.tut-challenge-meta {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+}
+
+.tut-difficulty {
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  font-weight: 700;
+}
+
+.tut-difficulty-easy {
+  color: var(--ok);
+}
+
+.tut-difficulty-medium {
+  color: var(--state-alert);
+}
+
+.tut-difficulty-hard {
+  color: var(--state-chase);
+}
+
+.tut-solved {
+  color: #f6e05e;
+  font-weight: 700;
+}
+
+.tut-hints summary {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.challenge-report {
+  margin-top: 8px;
+  font-size: 0.75rem;
+}
+
+.challenge-report ul {
+  margin: 4px 0;
+}
+
+.challenge-tests {
+  max-width: 420px;
+}
+
+.challenge-fail td {
+  color: var(--bad);
+}
+
+.challenge-banner {
+  padding: 6px 10px;
+  border: 2px solid var(--accent);
+  background: rgba(79, 209, 197, 0.06);
+  font-size: 0.78rem;
+  /* Leaves the Lab's graph and bottom tabs most of the height; a long report scrolls. */
+  flex-shrink: 0;
+  max-height: 20vh;
+  overflow-y: auto;
+}
+
+.challenge-banner p {
+  margin: 2px 0;
+}
+
+.tut-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--frame);
+}
+
+.tut-progress {
+  position: relative;
+  flex: 1;
+  height: 20px;
+  border: 1px solid var(--panel-edge);
+  background: var(--panel-inner);
+  font-size: 0.7rem;
+  text-align: center;
+  line-height: 20px;
+}
+
+.tut-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(79, 209, 197, 0.22);
+}
+
+.tut-progress span {
+  position: relative;
+}

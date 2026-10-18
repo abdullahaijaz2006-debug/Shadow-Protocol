@@ -1,0 +1,35 @@
+%% Shadow Protocol: overall system architecture, layered left to right (reorganised for print).
+%% Dependency direction is components -> game -> automata; automata/ imports nothing outside itself
+%% (enforced by src/automata/boundary.test.ts). React and Phaser talk only through GameBridge.
+%% Instead of one arrow per engine call, each engine box lists the parts of the app that use it.
+flowchart LR
+  WV["Tauri 2 desktop shell (Rust)<br/>Windows WebView2 loads the bundled<br/>frontend from http://tauri.localhost<br/>(CSP: own files only)"]
+
+  subgraph UI["React 19 UI · src/components · App.tsx: main menu, mode tabs, settings"]
+    VIS["Live DFA visualizer<br/>graph, history, 5-tuple + δ table<br/>Pause / Step / Next event / Reset"]
+    CMP["NFA ⇄ DFA comparison"]
+    LAB["Automata Lab<br/>LabStore, labReducer, validation,<br/>simulation, conversion, JSON"]
+    TUT["Tutorial<br/>content as data, widgets, challenges<br/>(challenges load into the Lab)"]
+  end
+
+  BR["GameBridge (src/game/bridge.ts)<br/>immutable snapshots: game → React<br/>(read with useSyncExternalStore)<br/>commands: React → game (send)"]
+
+  subgraph GAME["Phaser 3.90 game · src/game"]
+    SCENE["MainScene<br/>fixed 1/60 s ticks (SimulationClock)<br/>updates Player and Guards"]
+    PLAYER["Player + PlayerControls"]
+    GUARD["Guard × 3<br/>perception, timers, GuardBrain,<br/>GuardMover (BFS paths), GuardView"]
+  end
+
+  subgraph ENGINE["Automata engine · src/automata · pure TypeScript"]
+    E1["types, validate<br/>used by: Lab"]
+    E2["runDFA / CompiledDFA<br/>used by: comparison, Lab, tutorial"]
+    E3["runNFA / epsilonClosure /<br/>CompiledNFA<br/>used by: comparison, Lab, tutorial"]
+    E4["nfaToDfa (subset construction)<br/>used by: comparison, Lab, tutorial"]
+    E5["AutomatonRunner<br/>(feed, history, reset)<br/>used by: tutorial, Guard"]
+  end
+
+  WV --> UI
+  VIS <--> BR
+  BR <--> SCENE
+  UI -->|"comparison, Lab and tutorial call the engine"| ENGINE
+  GUARD -->|"GuardBrain wraps"| E5

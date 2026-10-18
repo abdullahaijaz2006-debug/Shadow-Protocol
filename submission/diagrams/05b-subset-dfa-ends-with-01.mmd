@@ -1,0 +1,16 @@
+%% Result of nfaToDfa(ENDS_WITH_01), as printed by the engine: 3 reachable subsets out of 2^3 = 8.
+%% F_D = {{q0,q2}} (the only subset containing the accepting NFA state q2).
+stateDiagram-v2
+  direction LR
+  state "{q0}" as A
+  state "{q0,q1}" as B
+  state "{q0,q2}" as C
+  [*] --> A
+  A --> B : 0
+  A --> A : 1
+  B --> B : 0
+  B --> C : 1
+  C --> B : 0
+  C --> A : 1
+  classDef accepting stroke-width:4px
+  class C accepting

@@ -1,0 +1,11 @@
+%% Textbook NFA ENDS_WITH_01 (src/automata/examples.ts): strings over {0,1} that end in 01.
+%% q0 has two transitions on 0 (to q0 and to q1): the nondeterministic "guess" that the final 01 starts here.
+%% F = {q2}. δ(q1, 0), δ(q2, 0) and δ(q2, 1) are empty: that computation path dies.
+stateDiagram-v2
+  direction LR
+  [*] --> q0
+  q0 --> q0 : 0, 1
+  q0 --> q1 : 0
+  q1 --> q2 : 1
+  classDef accepting stroke-width:4px
+  class q2 accepting

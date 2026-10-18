@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Shadow Protocol",
+  "version": "1.0.0",
+  "identifier": "com.shadow-protocol.game",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Shadow Protocol",
+        "width": 1320,
+        "height": 820,
+        "minWidth": 720,
+        "minHeight": 480,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "publisher": "Abdullah Aijaz",
+    "copyright": "© 2026 Abdullah Aijaz. Theory of Computation course project.",
+    "category": "Education",
+    "shortDescription": "A pixel-art stealth game whose guards are finite automata (DFA/NFA).",
+    "longDescription": "Shadow Protocol is a Theory of Computation project: a top-down stealth game whose guards are driven by deterministic finite automata, with a live DFA visualizer, an NFA vs DFA comparison mode, an Automata Lab (editor, simulator, subset construction, JSON save/load) and an interactive tutorial.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      },
+      "wix": {
+        "language": "en-US"
+      }
+    }
+  }
+}

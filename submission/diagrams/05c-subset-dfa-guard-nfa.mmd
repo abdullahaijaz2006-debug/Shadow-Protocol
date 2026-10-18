@@ -1,0 +1,37 @@
+%% Result of nfaToDfa(GUARD_NFA), as printed by the engine: 7 reachable subsets out of 2^5 = 32.
+%% Labels: spotted = PLAYER_SPOTTED, lost = PLAYER_LOST, sound = SOUND_HEARD,
+%%         caught = PLAYER_CAUGHT, timer = TIMER_EXPIRED.   F_D = {{CAPTURE}}.
+stateDiagram-v2
+  direction LR
+  state "{PATROL}" as P
+  state "{ALERT,CHASE}" as AC
+  state "{PATROL,ALERT,SEARCH,CHASE}" as PASC
+  state "{CHASE}" as C
+  state "{PATROL,SEARCH}" as PS
+  state "{CAPTURE}" as X
+  state "∅ (trap)" as E
+  [*] --> P
+  P --> AC : spotted
+  P --> P : lost, timer
+  P --> PASC : sound
+  P --> E : caught
+  AC --> C : spotted
+  AC --> PS : lost, timer
+  AC --> E : sound
+  AC --> X : caught
+  PASC --> AC : spotted
+  PASC --> PS : lost, timer
+  PASC --> PASC : sound
+  PASC --> X : caught
+  C --> C : spotted
+  C --> PS : lost
+  C --> E : sound, timer
+  C --> X : caught
+  PS --> AC : spotted
+  PS --> P : lost, timer
+  PS --> PASC : sound
+  PS --> E : caught
+  X --> X : all five symbols
+  E --> E : all five symbols
+  classDef accepting stroke-width:4px
+  class X accepting

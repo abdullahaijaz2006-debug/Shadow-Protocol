@@ -1,0 +1,32 @@
+%% Game event -> DFA transition -> guard behaviour, as implemented in src/game/guard/Guard.ts.
+%% Guard.process(symbol) is the only place symbols reach the DFA; every event is edge-triggered.
+flowchart LR
+  subgraph SENSE["1 · Perception and timers"]
+    direction TB
+    S1["canSee(): 90° cone, radius 96 px,<br/>line of sight by grid ray casting"]
+    S2["PerceptionTracker<br/>sight gained → PLAYER_SPOTTED (once)<br/>sight lost for 1500 ms → PLAYER_LOST (once)"]
+    S3["hearNoise(): Space within 128 px<br/>(through walls) → SOUND_HEARD"]
+    S4["CHASE only: feet within 10 px<br/>→ PLAYER_CAUGHT"]
+    S5["OneShotTimer: ALERT 700 ms, SEARCH 4000 ms<br/>→ TIMER_EXPIRED"]
+    S1 --> S2
+  end
+
+  P["Guard.process(symbol)"]
+  B["2 · GuardBrain → AutomatonRunner.feed(symbol)<br/>q′ = δ(q, symbol) from GUARD_DFA"]
+  H["TransitionRecord appended to the history<br/>(step, from, symbol, to, edges)"]
+  EN{"q′ ≠ q ?"}
+  ENTRY["3 · enter(q′): cancel timer, entry behaviour<br/>PATROL: walk route · ALERT: stop, arm 700 ms<br/>CHASE: re-path · SEARCH: go to last known position<br/>CAPTURE: stop"]
+  ACT["Per-tick behaviour reads guard.state<br/>GuardMover speed 40/0/70/50/0 px/s, BFS path,<br/>facing · GuardView icon and cone"]
+  SNAP["Scene publishes a snapshot (last 50 events)<br/>→ GameBridge → React visualizer"]
+  FB["Feedback (sound, shake, flash)<br/>reads the transition after it happened"]
+
+  S2 --> P
+  S3 --> P
+  S4 --> P
+  S5 --> P
+  P --> B --> H
+  B --> EN
+  EN -- yes --> ENTRY --> ACT
+  EN -- "no (self-loop)" --> ACT
+  H --> SNAP
+  H --> FB

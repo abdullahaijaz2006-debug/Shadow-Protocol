@@ -1,0 +1,15 @@
+%% The subset construction as implemented in nfaToDfa (src/automata/subsetConstruction.ts).
+%% Only subsets reachable from the start are built, using a FIFO worklist (breadth-first).
+flowchart TD
+  A["start = ECLOSE({q0})<br/>register it · worklist = [start]"] --> B{"worklist empty?"}
+  B -- no --> C["S = worklist.shift()"]
+  C --> D["next symbol a ∈ Σ (declaration order)"]
+  D --> E["moved = ⋃ δ_N(q, a) for q ∈ S"]
+  E --> F["T = ECLOSE(moved)"]
+  F --> G{"T registered before?<br/>(keyed by state indices)"}
+  G -- no --> H["register T, named by subsetName(T)<br/>e.g. {q0,q1}; the empty set is the trap state ∅<br/>append T to the worklist"]
+  G -- yes --> I["add DFA edge S --a--> T"]
+  H --> I
+  I --> D
+  D -- "every symbol done" --> B
+  B -- yes --> J["F_D = { S : S ∩ F_N ≠ ∅ }<br/>return the DFA and the map name → subset"]

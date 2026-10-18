@@ -1,0 +1,19 @@
+%% The demonstration "suspicious guard" NFA GUARD_NFA (src/game/guard/guardNfa.ts), with ε-edges.
+%% Used only by the comparison mode, a Lab preset and the tutorial; the guards in the level always run GUARD_DFA.
+%% A missing (state, symbol) pair means δ = ∅: that computation path dies.
+stateDiagram-v2
+  direction LR
+  [*] --> PATROL
+  PATROL --> ALERT : PLAYER_SPOTTED, SOUND_HEARD
+  PATROL --> SEARCH : SOUND_HEARD
+  PATROL --> PATROL : PLAYER_LOST, TIMER_EXPIRED
+  ALERT --> CHASE : ε
+  ALERT --> SEARCH : TIMER_EXPIRED
+  SEARCH --> PATROL : ε
+  SEARCH --> CHASE : PLAYER_SPOTTED
+  CHASE --> CHASE : PLAYER_SPOTTED
+  CHASE --> SEARCH : PLAYER_LOST
+  CHASE --> CAPTURE : PLAYER_CAUGHT
+  CAPTURE --> CAPTURE : all five symbols
+  classDef accepting stroke-width:4px
+  class CAPTURE accepting

@@ -1,0 +1,16 @@
+%% Automata Lab workflow (src/components/lab/). The document uses stable state ids; names are display data.
+flowchart TD
+  START(["Open the Lab"]) --> SRC{"Where does the automaton come from?"}
+  SRC -->|"draw / edit"| EDIT["Edit states, Σ, transitions, q0, F,<br/>DFA/NFA, ε-edges<br/>(labReducer refuses impossible edits)"]
+  SRC -->|"preset (deep copy)"| DOC
+  SRC -->|"Load .json / paste JSON<br/>(parseLab checks the shape only)"| DOC
+  SRC -->|"tutorial challenge: Start"| DOC
+  EDIT --> DOC["LabAutomaton document<br/>(LabStore, one-step undo)"]
+  DOC --> VAL["validateLab = engine validate()<br/>+ NO_START, BAD_STATE_NAME, BAD_SYMBOL"]
+  VAL -->|"problems found"| PROB["Problems tab: each issue linked to<br/>highlighted states / transitions"] --> EDIT
+  VAL -->|"no problems"| OK{"Choose an action"}
+  OK --> SIM["Simulate: Step / Run / Reset<br/>runDFA or runNFA on the prefix read<br/>current state or active set, trace, verdict"]
+  OK --> CONV["NFA → DFA: convertLabToDfa = nfaToDfa<br/>+ checkEquivalence on all short strings"]
+  OK --> SAVE["Save: serializeLab → .json download<br/>(format shadow-protocol/automaton, version 1)"]
+  OK --> CHK["Challenge Check (tutorial)<br/>hand-picked tests + agreement with a<br/>reference on all strings up to length 8"]
+  CONV -->|"new document (undoable)"| DOC

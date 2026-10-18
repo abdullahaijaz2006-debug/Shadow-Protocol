@@ -1,0 +1,21 @@
+%% The guard DFA M = (Q, Σ, δ, q0, F) exactly as defined in src/game/guard/guardDfa.ts.
+%% Q = {PATROL, ALERT, CHASE, SEARCH, CAPTURE}; q0 = PATROL; F = {CAPTURE} (formal accepting set).
+%% All 25 (state, symbol) pairs are shown; a self-loop means "this event is ignored in this state".
+stateDiagram-v2
+  direction LR
+  [*] --> PATROL
+  PATROL --> ALERT : PLAYER_SPOTTED
+  PATROL --> SEARCH : SOUND_HEARD
+  PATROL --> PATROL : PLAYER_LOST, PLAYER_CAUGHT, TIMER_EXPIRED
+  ALERT --> CHASE : TIMER_EXPIRED
+  ALERT --> SEARCH : PLAYER_LOST
+  ALERT --> ALERT : PLAYER_SPOTTED, SOUND_HEARD, PLAYER_CAUGHT
+  CHASE --> CAPTURE : PLAYER_CAUGHT
+  CHASE --> SEARCH : PLAYER_LOST
+  CHASE --> CHASE : PLAYER_SPOTTED, SOUND_HEARD, TIMER_EXPIRED
+  SEARCH --> CHASE : PLAYER_SPOTTED
+  SEARCH --> PATROL : TIMER_EXPIRED
+  SEARCH --> SEARCH : PLAYER_LOST, SOUND_HEARD, PLAYER_CAUGHT
+  CAPTURE --> CAPTURE : all five symbols (absorbing)
+  classDef accepting stroke-width:4px
+  class CAPTURE accepting
